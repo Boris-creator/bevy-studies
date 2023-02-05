@@ -1,5 +1,4 @@
 //! Renders a 2D scene containing a single, moving sprite.
-
 use bevy::prelude::*;
 
 fn main() {
@@ -12,8 +11,8 @@ fn main() {
 
 #[derive(Component)]
 enum Direction {
-    Up,
-    Down,
+    Clockwise,
+    CounterClockwise,
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -24,7 +23,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             transform: Transform::from_xyz(100., 0., 0.),
             ..default()
         },
-        Direction::Up,
+        Direction::Clockwise,
     ));
 }
 
@@ -32,15 +31,23 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 /// the last frame.
 fn sprite_movement(time: Res<Time>, mut sprite_position: Query<(&mut Direction, &mut Transform)>) {
     for (mut logo, mut transform) in &mut sprite_position {
+        let x = transform.translation.x;
+        let y = transform.translation.y;
+        let mut angle = 2. * (y / (x + (x.powf(2.) + y.powf(2.)).sqrt())).atan();
+        let step = 0.1 * time.delta_seconds();
         match *logo {
-            Direction::Up => transform.translation.y += 150. * time.delta_seconds(),
-            Direction::Down => transform.translation.y -= 150. * time.delta_seconds(),
+            Direction::Clockwise => angle -= step,
+            Direction::CounterClockwise => angle += step,
         }
+        transform.translation.x = angle.cos() * 200.0;
+        transform.translation.y = angle.sin() * 200.0;
+        //println!("{} {} {}", &angle, transform.translation.x, transform.translation.y);
 
-        if transform.translation.y > 200. {
-            *logo = Direction::Down;
-        } else if transform.translation.y < -200. {
-            *logo = Direction::Up;
+        if angle.abs() < step {
+            match *logo {
+                Direction::Clockwise => *logo = Direction::CounterClockwise,
+                Direction::CounterClockwise => *logo = Direction::Clockwise,
+            }
         }
     }
 }

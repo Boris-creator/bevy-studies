@@ -6,6 +6,7 @@ Cargo.lock
 .cargo/config.toml
 /.idea
 /.vscode
+.github
 /benches/target
 dxcompiler.dll
 dxil.dll
